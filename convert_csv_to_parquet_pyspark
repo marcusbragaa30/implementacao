@@ -1,0 +1,21 @@
+from pyspark import SparkContext
+from pyspark.sql import SQLContext
+from pyspark.sql.types import *
+import os
+
+if __name__ == "__main__":
+    sc = SparkContext(appName="citibike.csv")
+    sqlContext = SQLContext(sc)
+
+    schema = StructType([
+            StructField("tripduration", StringType(), True),
+            StructField("starttime", StringType(), True),
+            StructField("stoptime", StringType(), True),
+            StructField("start_station_id", StringType(), True),
+			StructField("start_station_latitude", StringType(), True)])
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    csvfilename = os.path.join(dirname,'citibike.csv')    
+    rdd = sc.textFile(csvfilename).map(lambda line: line.split(","))
+    df = sqlContext.createDataFrame(rdd, schema)
+    parquetfilename = os.path.join(dirname,'citibike.parquet')    
+    df.write.mode('overwrite').parquet(parquetfilename)
